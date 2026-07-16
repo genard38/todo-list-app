@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /*  interface Todo { ... } functions almost exacly like java interface or a simple POJO's filed
     declaration. it's a compile-time-only contract; it produces zero runtime code
@@ -11,12 +11,22 @@ interface Todo {
 }
 
 function App() {
-  const [todos, setTodos] = useState<Todo[]>([
-    { id: 1, text: "Learn React", done: false },
-    { id: 2, text: "Build a to-do app", done: false },
-    { id: 3, text: "Master Tailwind", done: true },
-  ]);
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    const saved = localStorage.getItem("todos");
+    return saved
+      ? JSON.parse(saved)
+      : [
+          { id: 1, text: "Learn React", done: false },
+          { id: 2, text: "Build a to-do app", done: false },
+          { id: 3, text: "Master Tailwind", done: false },
+        ];
+  });
+
   const [inputValue, setInputValue] = useState<string>("");
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
 
   function handleAddTodo() {
     if (inputValue.trim() === "") return;
