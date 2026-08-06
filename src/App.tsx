@@ -144,13 +144,13 @@ function App() {
                 />
                 <button
                   onClick={() => handleSaveEdit(todo.id)}
-                  className="text-green-600 hover:text-green-800 text-sm"
+                  className="ml-2 text-green-600 hover:text-green-800 text-sm"
                 >
                   Save
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="text-gray-500 hover:text-gray-700 text-sm"
+                  className="ml-2 text-gray-500 hover:text-gray-700 text-sm"
                 >
                   Cancel
                 </button>
