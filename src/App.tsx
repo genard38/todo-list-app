@@ -99,7 +99,7 @@ function App() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-violet-100 rounded-lg shadow">
+    <div className="max-w-md mx-auto mt-10 p-6 bg-violet-200 rounded-lg shadow outline-2 outline-black">
       <h1 className="text-2xl font-bold mb-4">My To-Do List</h1>
 
       <div className="flex gap-2 mb-4">
