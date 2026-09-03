@@ -99,7 +99,7 @@ function App() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow">
+    <div className="max-w-md mx-auto mt-10 p-6 bg-violet-100 rounded-lg shadow">
       <h1 className="text-2xl font-bold mb-4">My To-Do List</h1>
 
       <div className="flex gap-2 mb-4">
@@ -108,7 +108,7 @@ function App() {
           value={inputValue}
           onChange={handleInputChange}
           placeholder="Add a new task..."
-          className="w-96 ml-2 border-black border-2 p-2.5 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)] focus:bg-[#FFA6F6] active:shadow-[2px_2px_0px_rgba(0,0,0,1)] rounded-md"
+          className="w-96 ml-2 bg-white border-black border-2 p-2.5 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)] focus:bg-[#FFA6F6] active:shadow-[2px_2px_0px_rgba(0,0,0,1)] rounded-md"
           //flex-1 border rounded px-3 py-2 min-w-[12.5px]
         />
         <button
