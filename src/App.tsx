@@ -1,94 +1,148 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 
 /*  interface Todo { ... } functions almost exacly like java interface or a simple POJO's filed
     declaration. it's a compile-time-only contract; it produces zero runtime code
 */
 
 interface Todo {
-  id: number;
+  _id: string; // MongoDB uses _id instead of id
   text: string;
   done: boolean;
 }
 
-// useState is a React hook that manages state in a component
-// Todo[] tells TypeScript that todos is an array of Todo objects.
-// the setTodos function is used later to update that array.
-
 function App() {
-  const [todos, setTodos] = useState<Todo[]>(() => {
-    const saved = localStorage.getItem("todos");
-    return saved
-      ? JSON.parse(saved) //converts the string back into a JavaScript array of objects
-      : [];
-  });
+  // const [todos, setTodos] = useState<Todo[]>(() => {
+  //   const saved = localStorage.getItem("todos");
+  //   return saved
+  //     ? JSON.parse(saved) //converts the string back into a JavaScript array of objects
+  //     : [];
+  // });
 
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
-  const [editingId, setEditingId] = useState<number | null>(null); // null when no item is being edited
+  const [editingId, setEditingId] = useState<string | null>(null); // null when no item is being edited
   const [editText, setEditText] = useState<string>("");
 
+  // Fetch todos from backend
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
-
-  function handleAddTodo() {
-    if (inputValue.trim() === "") return; // Checks if the input field is empty or contains only whitespace do nothing
-
-    const newTodo: Todo = {
-      // create a new Todo Object
-      id: Date.now(),
-      text: inputValue,
-      done: false,
+    const fetchTodos = async () => {
+      try {
+        const response = await axios.get("http://localhost:5001/api/todos");
+        setTodos(response.data);
+      } catch (error) {
+        console.error("Error fetching todos:", error);
+      }
     };
 
-    // Update State
-    // Uses the spread operator(...) to create a new array containing:
-    // All existing todos (...todos)
-    // The new todo object appended at the end
-    // React will re-render the component with the updated
-    setTodos([...todos, newTodo]); // Calls setTodos to update the component's state
-    setInputValue("");
-  }
+    fetchTodos();
+  }, []);
 
-  function handleDeleteTodo(id: number) {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  }
+  // Add todo
+  const handleAddTodo = async () => {
+    if (inputValue.trim() === "") return; // Checks if the input field is empty or contains only whitespace do nothing
+
+    try {
+      const response = await axios.post("http://localhost:5001/api/todos", {
+        text: inputValue,
+      });
+      setTodos([...todos, response.data]);
+      setInputValue("");
+    } catch (error) {
+      console.error("Error adding todo:", error);
+    }
+  };
+
+  // Toggle todo completion
+  const handleToggleTodo = async (id: string) => {
+    // Update UI immediately
+    setTodos(todos.map((t) => (t._id === id ? { ...t, done: !t.done } : t)));
+    try {
+      const todo = todos.find((t) => t._id === id);
+      if (!todo) return;
+
+      const response = await axios.put(
+        `http://localhost:5001/api/todos/${id}`,
+        {
+          text: todo.text,
+          done: !todo.done,
+        },
+      );
+
+      // setTodos(todos.map((t) => (t._id === id ? response.data : t)));
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+    }
+  };
+
+  // Update todo (for editing)
+  const handleUpdateTodo = async (id: string) => {
+    if (editText.trim() === "") return;
+
+    try {
+      const response = await axios.put(
+        `http://localhost:5001/api/todos/${id}`,
+        {
+          text: editText,
+        },
+      );
+
+      setTodos(todos.map((t) => (t._id === id ? response.data : t)));
+      setEditingId(null);
+      setEditText("");
+    } catch (error) {
+      console.error("Error updating todo:", error);
+    }
+  };
+
+  // Delete todo
+  const handleDeleteTodo = async (id: string) => {
+    try {
+      await axios.delete(`http://localhost:5001/api/todos/${id}`);
+      setTodos(todos.filter((t) => t._id !== id));
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+    }
+  };
 
   // toggles the done status of a specific to-do time in the component's state.
   // Receives an id(the unique identifier of the to-do whose completion state should be flipped).
   // Updates the todos state array so that the to-do with the matching id has its done boolean
   // inverted (true -> false or false -> true)
-  function handleToggleDone(id: number) {
-    setTodos(
-      todos.map(
-        (todo) =>
-          // we then override the done property with its logical opposite (!todo.done)
-          todo.id === id ? { ...todo, done: !todo.done } : todo,
-        // if the id's do not match, we simply return the original todo unchanged
-      ),
-    );
-  }
+  // function handleToggleDone(_id: string) {
+  //   setTodos(
+  //     todos.map(
+  //       (todo) =>
+  //         // we then override the done property with its logical opposite (!todo.done)
+  //         todo._id === _id ? { ...todo, done: !todo.done } : todo,
+  //       // if the id's do not match, we simply return the original todo unchanged
+  //     ),
+  //   );
+  // }
 
-  function handleStartEdit(id: number, currentText: string) {
-    setEditingId(id);
-    setEditText(currentText);
-  }
+  // Start editing
+  const handleStartEdit = (_id: string, text: string) => {
+    setEditingId(_id);
+    setEditText(text);
+  };
 
-  function handleSaveEdit(id: number) {
+  function handleSaveEdit(_id: string) {
     if (editText.trim() === "") return;
 
     setTodos(
       todos.map((todo) =>
-        todo.id === id ? { ...todo, text: editText } : todo,
+        todo._id === _id ? { ...todo, text: editText } : todo,
       ),
     );
     setEditingId(null);
     setEditText("");
   }
 
-  function handleCancelEdit() {
+  // Cancel Editing
+  const handleCancelEdit = () => {
     setEditingId(null);
     setEditText("");
-  }
+  };
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.target.value); // (e.target.value) and updates the component's state via the setInputValue
@@ -135,10 +189,10 @@ function App() {
       <ul>
         {todos.map((todo) => (
           <li
-            key={todo.id}
+            key={todo._id}
             className="flex items-center justify-between py-2 border-b" // horizontal line
           >
-            {editingId === todo.id ? (
+            {editingId === todo._id ? (
               <>
                 <input
                   type="text"
@@ -155,7 +209,7 @@ function App() {
                 </button> */}
                 {/* Save button*/}
                 <button
-                  onClick={() => handleSaveEdit(todo.id)}
+                  onClick={() => handleSaveEdit(todo._id)}
                   className="ml-2 border-black border-2 rounded-md bg-[#B4FFB4] hover:bg-[#88FF88] active:bg-[#5CF75C] w-10 h-10 flex items-center justify-center hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                 >
                   <svg
@@ -183,7 +237,7 @@ function App() {
             ) : (
               <>
                 <span
-                  onClick={() => handleToggleDone(todo.id)}
+                  onClick={() => handleToggleTodo(todo._id)}
                   className={`cursor-pointer flex-1 ${
                     todo.done ? "line-through text-gray-400" : ""
                   }`}
@@ -199,7 +253,7 @@ function App() {
 
                 {/*edit button */}
                 <button
-                  onClick={() => handleStartEdit(todo.id, todo.text)}
+                  onClick={() => handleStartEdit(todo._id, todo.text)}
                   className="border-black border-2 rounded-md bg-[#A6FAFF] hover:bg-[#79F7FF] active:bg-[#53f2fc] w-10 h-10 flex items-center justify-center p-0
                   hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]"
                 >
@@ -220,7 +274,7 @@ function App() {
                   </svg>
                 </button>
                 <button
-                  onClick={() => handleDeleteTodo(todo.id)}
+                  onClick={() => handleDeleteTodo(todo._id)}
                   className="ml-2 text-red-500 hover:text-red-700 text-sm"
                 >
                   Delete
