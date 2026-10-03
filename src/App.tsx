@@ -12,17 +12,15 @@ interface Todo {
 }
 
 function App() {
-  // const [todos, setTodos] = useState<Todo[]>(() => {
-  //   const saved = localStorage.getItem("todos");
-  //   return saved
-  //     ? JSON.parse(saved) //converts the string back into a JavaScript array of objects
-  //     : [];
-  // });
-
   const [todos, setTodos] = useState<Todo[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null); // null when no item is being edited
   const [editText, setEditText] = useState<string>("");
+
+  // GET / -> getTodos (fetches all todos)
+  // POST / -> createTodo (creates a new todo)
+  // PUT /:id -> updateTodo (updates a specific todo)
+  // DELETE/:id -> deleteTodo (deletes a specific todo)
 
   // Fetch todos from backend
   useEffect(() => {
@@ -56,7 +54,14 @@ function App() {
   // Toggle todo completion
   const handleToggleTodo = async (id: string) => {
     // Update UI immediately
-    setTodos(todos.map((t) => (t._id === id ? { ...t, done: !t.done } : t)));
+    setTodos(
+      todos.map((todo) =>
+        // todo._id === id checks if the current to-do items's ID matches the ID we're toggling
+        // If true { ...todo, done: !todo.done} creates a new object with the done property flipped
+        // If false: returns the original todo object unchanged
+        todo._id === id ? { ...todo, done: !todo.done } : todo,
+      ),
+    );
     try {
       const todo = todos.find((t) => t._id === id);
       if (!todo) return;
