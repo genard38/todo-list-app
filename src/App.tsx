@@ -44,7 +44,7 @@ function App() {
       const response = await axios.post("http://localhost:5001/api/todos", {
         text: inputValue,
       });
-      setTodos([...todos, response.data]);
+      setTodos((prevTodos) => [...prevTodos, response.data]);
       setInputValue("");
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -53,15 +53,6 @@ function App() {
 
   // Toggle todo completion
   const handleToggleTodo = async (id: string) => {
-    // Update UI immediately
-    setTodos(
-      todos.map((todo) =>
-        // todo._id === id checks if the current to-do items's ID matches the ID we're toggling
-        // If true { ...todo, done: !todo.done} creates a new object with the done property flipped
-        // If false: returns the original todo object unchanged
-        todo._id === id ? { ...todo, done: !todo.done } : todo,
-      ),
-    );
     try {
       const todo = todos.find((t) => t._id === id);
       if (!todo) return;
@@ -74,29 +65,11 @@ function App() {
         },
       );
 
-      // setTodos(todos.map((t) => (t._id === id ? response.data : t)));
+      setTodos((prevTodos) =>
+        prevTodos.map((t) => (t._id === id ? response.data : t)),
+      );
     } catch (error) {
       console.error("Error toggling todo:", error);
-    }
-  };
-
-  // Update todo (for editing)
-  const handleUpdateTodo = async (id: string) => {
-    if (editText.trim() === "") return;
-
-    try {
-      const response = await axios.put(
-        `http://localhost:5001/api/todos/${id}`,
-        {
-          text: editText,
-        },
-      );
-
-      setTodos(todos.map((t) => (t._id === id ? response.data : t)));
-      setEditingId(null);
-      setEditText("");
-    } catch (error) {
-      console.error("Error updating todo:", error);
     }
   };
 
@@ -104,7 +77,7 @@ function App() {
   const handleDeleteTodo = async (id: string) => {
     try {
       await axios.delete(`http://localhost:5001/api/todos/${id}`);
-      setTodos(todos.filter((t) => t._id !== id));
+      setTodos((prevTodos) => prevTodos.filter((t) => t._id !== id));
     } catch (error) {
       console.error("Error deleting todo:", error);
     }
@@ -134,8 +107,8 @@ function App() {
   function handleSaveEdit(_id: string) {
     if (editText.trim() === "") return;
 
-    setTodos(
-      todos.map((todo) =>
+    setTodos((prevTodos) =>
+      prevTodos.map((todo) =>
         todo._id === _id ? { ...todo, text: editText } : todo,
       ),
     );
@@ -167,7 +140,7 @@ function App() {
           value={inputValue}
           onChange={handleInputChange}
           placeholder="Add a new task..."
-          className="w-96 ml-2 bg-white border-black border-2 p-2.5 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)] focus:bg-[#FFA6F6] active:shadow-[2px_2px_0px_rgba(0,0,0,1)] rounded-md"
+          className="min-w-0 flex-1 bg-white border-black border-2 p-2.5 focus:outline-none focus:shadow-[2px_2px_0px_rgba(0,0,0,1)] focus:bg-[#FFA6F6] active:shadow-[2px_2px_0px_rgba(0,0,0,1)] rounded-md"
           //flex-1 border rounded px-3 py-2 min-w-[12.5px]
         />
         <button
@@ -203,7 +176,7 @@ function App() {
                   type="text"
                   value={editText}
                   onChange={handleEditInputChange}
-                  className="flex-1 border rounded px-2 py-1 min-w-[12.5px]"
+                  className="min-w-0 flex-1 border rounded px-2 py-1"
                   autoFocus
                 />
                 {/* <button
@@ -243,7 +216,7 @@ function App() {
               <>
                 <span
                   onClick={() => handleToggleTodo(todo._id)}
-                  className={`cursor-pointer flex-1 ${
+                  className={`min-w-0 flex-1 [overflow-wrap:anywhere] ${
                     todo.done ? "line-through text-gray-400" : ""
                   }`}
                 >
